@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Applications - Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}">LabsAtYale</a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.is_authenticated %} {% if current_user.role ==
+          'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          {% endif %} {% if current_user.role == 'student' %}
+          <a
+            href="{{ url_for('applications') }}"
+            class="{% if request.path == '/applications' %}active{% endif %}"
+            >Applications</a
+          >
+          <a
+            href="{{ url_for('saved_fellowships') }}"
+            class="{% if request.path == '/saved_fellowships' %}active{% endif %}"
+            >Saved Fellowships</a
+          >
+          {% endif %}
+
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>My Applications</h1>
+
+      {% if applications_list|length == 0 %}
+      <p>You have not applied to any fellowships yet.</p>
+      {% else %}
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>Fellowship Name</th>
+            <th>Lab Name</th>
+            <th>Faculty Name</th>
+            <th>Class Years</th>
+            <th>Description</th>
+            <th>Deadline</th>
+            <th>Stipend</th>
+            <th>Status</th>
+            <th>Applied At</th>
+            <th>Questions</th>
+            <th>Withdraw</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications_list %}
+          <tr>
+            <td>{{ app.get_fellowship_name() }}</td>
+            <td>{{ app.get_lab_name() }}</td>
+            <td>{{ app.get_faculty_name() }}</td>
+            <td>{{ app.get_class_years().replace(",", "<br />")|safe }}</td>
+            <td>{{ app.get_description() }}</td>
+            <td>{{ app.get_deadline() }}</td>
+            <td>${{ app.get_stipend() }}</td>
+            <td>{{ app.get_status() }}</td>
+            <td>{{ app.get_applied_at() }}</td>
+            <td>{{ app.get_questions() }}</td>
+            <td>
+              <form
+                method="POST"
+                action="{{ url_for('withdraw_application', fellowship_id=app.fellowship_id) }}"
+                style="display: inline"
+              >
+                <button
+                  type="submit"
+                  class="btn-danger"
+                  onclick="return confirm('Are you sure you want to withdraw this application?');"
+                >
+                  Withdraw
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <section
+        style="
+          margin-top: 40px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 5px;
+          border: 1px solid #ddd;
+        "
+      >
+        <h2>Rank Your Fellowships</h2>
+        <p>
+          Drag and drop to rank your applied fellowships in order of preference.
+          #1 is your most preferred.
+        </p>
+
+        {% set ranked_ids = student_preferences | map(attribute=0) | list if
+        student_preferences else [] %}
+
+        <form method="POST" id="rankForm" onsubmit="return beforeSubmit();">
+          <div
+            id="applicationsContainer"
+            style="border: 1px solid #ddd; padding: 15px; border-radius: 5px"
+          >
+            {% if student_preferences %} {% for fid, rank in student_preferences
+            %} {% for app in applications_list %} {% if app.fellowship_id == fid
+            %}
+            <div
+              class="fellowship-item"
+              draggable="true"
+              data-fellowship-id="{{ app.fellowship_id }}"
+              style="
+                padding: 12px;
+                margin-bottom: 10px;
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                cursor: move;
+              "
+            >
+              <strong>{{ app.get_fellowship_name() }}</strong> - {{
+              app.get_lab_name() }} <br /><small
+                >Faculty: {{ app.get_faculty_name() }}</small
+              >
+            </div>
+            {% endif %} {% endfor %} {% endfor %} {% endif %} {% for app in
+            applications_list %} {% if app.fellowship_id not in ranked_ids %}
+            <div
+              class="fellowship-item"
+              draggable="true"
+              data-fellowship-id="{{ app.fellowship_id }}"
+              style="
+                padding: 12px;
+                margin-bottom: 10px;
+                background: #f5f5f5;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                cursor: move;
+              "
+            >
+              <strong>{{ app.get_fellowship_name() }}</strong> - {{
+              app.get_lab_name() }} <br /><small
+                >Faculty: {{ app.get_faculty_name() }}</small
+              >
+            </div>
+            {% endif %} {% endfor %}
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="
+              margin-top: 15px;
+              background: #007bff;
+              color: white;
+              padding: 10px 20px;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            Save Rankings
+          </button>
+        </form>
+
+        <script>
+          let draggedElement = null;
+
+          function initializeDragDrop() {
+            document.querySelectorAll(".fellowship-item").forEach((item) => {
+              item.addEventListener("dragstart", () => {
+                draggedElement = item;
+                item.style.opacity = "0.5";
+              });
+
+              item.addEventListener("dragend", () => {
+                item.style.opacity = "1";
+              });
+
+              item.addEventListener("dragover", (e) => {
+                e.preventDefault();
+              });
+
+              item.addEventListener("drop", (e) => {
+                e.preventDefault();
+                if (draggedElement !== item) {
+                  const container = document.getElementById(
+                    "applicationsContainer"
+                  );
+                  const items = Array.from(
+                    container.querySelectorAll(".fellowship-item")
+                  );
+                  const draggedIndex = items.indexOf(draggedElement);
+                  const targetIndex = items.indexOf(item);
+
+                  if (draggedIndex < targetIndex) {
+                    item.parentNode.insertBefore(
+                      draggedElement,
+                      item.nextSibling
+                    );
+                  } else {
+                    item.parentNode.insertBefore(draggedElement, item);
+                  }
+                }
+              });
+            });
+          }
+
+          function beforeSubmit() {
+            const container = document.getElementById("applicationsContainer");
+            const items = container.querySelectorAll(".fellowship-item");
+            const form = document.getElementById("rankForm");
+
+            form
+              .querySelectorAll('input[type="hidden"]')
+              .forEach((input) => input.remove());
+
+            items.forEach((item) => {
+              const fellowshipId = item.getAttribute("data-fellowship-id");
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = "fellowship_rank[]";
+              input.value = fellowshipId;
+              form.appendChild(input);
+            });
+
+            return true;
+          }
+
+          document.addEventListener("DOMContentLoaded", initializeDragDrop);
+        </script>
+
+        <style>
+          .fellowship-item:hover {
+            background: #e8e8e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+        </style>
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

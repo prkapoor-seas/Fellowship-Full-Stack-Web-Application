@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}"> LabsAtYale </a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.role == 'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          <a
+            href="{{ url_for('faculty_fellowships') }}"
+            class="{% if request.path == '/faculty/fellowships' %}active{% endif %}"
+            >Ranking</a
+          >
+          <a
+            href="{{ url_for('faculty_fellowship_applicants', fellowship_id=fellowship_id) }}"
+            class="{% if request.path == '/faculty/fellowship' %}active{% endif %}"
+            >Applicants</a
+          >
+          {% endif %} {% if current_user.role == 'student' %}
+          <a
+            href="{{ url_for('applications') }}"
+            class="{% if request.path == '/applications' %}active{% endif %}"
+            >Applications</a
+          >
+          <a
+            href="{{ url_for('saved_fellowships') }}"
+            class="{% if request.path == '/saved_fellowships' %}active{% endif %}"
+            >Saved Fellowships</a
+          >
+          {% endif %} {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <h2 style="text-align: center; margin-top: 30px">Saved Fellowships</h2>
+
+    {% if fellowships_list|length == 0 %}
+    <p style="text-align: center; margin-top: 20px">
+      You have no saved fellowships.
+    </p>
+    {% else %}
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th>Fellowship Name</th>
+          <th>Lab Name</th>
+          <th>Faculty Name</th>
+          <th>Class Years</th>
+          <th>Description</th>
+          <th class="sortable" data-column="deadline">Deadline</th>
+          <th class="sortable" data-column="stipend">Stipend</th>
+          {% if current_user.role == 'student' %}
+          <th>Save</th>
+          <th>Application Link</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in fellowships_list %}
+        <tr
+          class="fellowship-row"
+          data-fellowship-name="{{ f.get_fellowship_name() }}"
+          data-fellowship-id="{{ f.get_fellowship_id() }}"
+          data-lab-name="{{ f.get_lab_name() }}"
+          data-faculty="{{ f.get_faculty_name() }}"
+          data-class="{{  f.get_class_years() }}"
+          data-description="{{ f.get_description() }}"
+          data-deadline="{{ f.get_deadline() }}"
+          data-stipend="{{ f.get_stipend() }}"
+        >
+          <td>{{f.get_fellowship_name()}}</td>
+          <td>{{f.get_lab_name()}}</td>
+          <td>{{f.get_faculty_name()}}</td>
+          <td>{{ f.get_class_years().replace(",", "<br />")|safe }}</td>
+          <td>{{ f.get_description() }}</td>
+          <td>{{ f.get_deadline() }}</td>
+          <td>${{ f.get_stipend() }}</td>
+          {% if current_user.role == 'student' %}
+          <td>
+            <button
+              class="save-btn"
+              data-fellowship-id="{{ f.get_fellowship_id() }}"
+              data-saved="{{ 'true' if f.get_fellowship_id() in saved_fellowship_ids else 'false' }}"
+            >
+              {{ '★' if f.get_fellowship_id() in saved_fellowship_ids else '☆'
+              }}
+            </button>
+          </td>
+          <td>
+            <a
+              href="{{ url_for('apply_fellowship', fellowship_id=f.get_fellowship_id()) }}"
+              class="btn btn-primary"
+            >
+              Apply
+            </a>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+    <div id="modal" class="modal-overlay">
+      <div class="modal-card">
+        <button type="button" class="modal-close">&times;</button>
+
+        <h1 id="modal-fellowship-name"></h1>
+
+        <p id="modal-description"></p>
+
+        <p>
+          <strong>PI:</strong> <span id="modal-faculty"></span><br />
+          <strong>Lab Name:</strong> <span id="modal-lab"></span><br />
+          <strong>Class Years:</strong> <span id="modal-class"></span><br />
+          <strong>Deadline:</strong> <span id="modal-deadline"></span><br />
+          <strong>Stipend:</strong> <span id="modal-stipend"></span>
+        </p>
+        {% if current_user.role == 'student' %}
+        <p>
+          <a id="modal-apply" class="btn btn-primary" href="#"> Apply </a>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+    <script>
+      (function () {
+        const modal = document.getElementById("modal");
+        const closeBtn = modal.querySelector(".modal-close");
+        const nameEl = document.getElementById("modal-fellowship-name");
+        const descEl = document.getElementById("modal-description");
+        const facultyEl = document.getElementById("modal-faculty");
+        const labEl = document.getElementById("modal-lab");
+        const classEl = document.getElementById("modal-class");
+        const deadlineEl = document.getElementById("modal-deadline");
+        const stipendEl = document.getElementById("modal-stipend");
+        const applyEl = document.getElementById("modal-apply");
+        function openModalFromRow(row) {
+          nameEl.textContent = row.dataset.fellowshipName;
+          descEl.textContent = row.dataset.description;
+          facultyEl.textContent = row.dataset.faculty;
+          labEl.textContent = row.dataset.labName;
+          classEl.textContent = row.dataset["class"];
+          deadlineEl.textContent = row.dataset.deadline;
+          stipendEl.textContent = "$" + row.dataset.stipend;
+          if (applyEl) {
+            applyEl.href = "/fellowships/apply/" + row.dataset.fellowshipId;
+          }
+          modal.classList.add("open");
+          document.body.classList.add("modal-open");
+        }
+        function closeModal() {
+          modal.classList.remove("open");
+          document.body.classList.remove("modal-open");
+        }
+        document.querySelectorAll(".fellowship-row").forEach(function (row) {
+          row.addEventListener("click", function () {
+            openModalFromRow(row);
+          });
+        });
+
+        closeBtn.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (e) {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        const table = document.querySelector(".result-table");
+        if (table) {
+          const tbody = table.querySelector("tbody");
+          let sortDirection = 1;
+
+          document.querySelectorAll("th.sortable").forEach((th) => {
+            th.addEventListener("click", () => {
+              const column = th.dataset.column;
+              const rows = Array.from(tbody.querySelectorAll("tr"));
+
+              rows.sort((a, b) => {
+                let A = a.dataset[column];
+                let B = b.dataset[column];
+
+                if (!isNaN(A) && !isNaN(B)) {
+                  return (parseFloat(A) - parseFloat(B)) * sortDirection;
+                }
+
+                if (!isNaN(Date.parse(A)) && !isNaN(Date.parse(B))) {
+                  return (new Date(A) - new Date(B)) * sortDirection;
+                }
+
+                return A.localeCompare(B) * sortDirection;
+              });
+
+              document
+                .querySelectorAll("th.sortable")
+                .forEach((h) => h.classList.remove("asc", "desc"));
+
+              if (sortDirection === 1) th.classList.add("asc");
+              else th.classList.add("desc");
+
+              sortDirection *= -1;
+
+              tbody.innerHTML = "";
+              rows.forEach((row) => tbody.appendChild(row));
+            });
+          });
+        }
+
+        document.querySelectorAll(".save-btn").forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const fellowshipId = this.getAttribute("data-fellowship-id");
+            const row = this.closest("tr");
+            fetch(`/save/${fellowshipId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  if (!data.saved) {
+                    row.remove();
+                    const remainingRows =
+                      document.querySelectorAll(".fellowship-row");
+                    if (remainingRows.length === 0) {
+                      location.reload();
+                    }
+                  }
+                }
+              })
+              .catch((error) => console.error("Error:", error));
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

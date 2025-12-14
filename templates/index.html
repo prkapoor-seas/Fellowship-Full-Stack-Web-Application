@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}"> LabsAtYale </a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.role == 'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          <a
+            href="{{ url_for('faculty_fellowships') }}"
+            class="{% if request.path == '/faculty/fellowships' %}active{% endif %}"
+            >Ranking</a
+          >
+          <a
+            href="{{ url_for('faculty_all_applicants') }}"
+            class="{% if request.path == '/faculty/applicants' %}active{% endif %}"
+            >Applicants</a
+          >
+          {% endif %} {% if current_user.role == 'student' %}
+          <a
+            href="{{ url_for('applications') }}"
+            class="{% if request.path == '/applications' %}active{% endif %}"
+            >Applications</a
+          >
+          <a
+            href="{{ url_for('saved_fellowships') }}"
+            class="{% if request.path == '/saved_fellowships' %}active{% endif %}"
+            >Saved Fellowships</a
+          >
+          {% endif %} {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="hero">
+      <div class="heroStuff">
+        <div id="hero-root"></div>
+        <!-- <h1 class="heroTitle">An easier way to research research.</h1>
+        <p class="heroSubtitle">
+          LabsAtYale is a platform designed to help you find a research lab more
+          efficiently.
+        </p> -->
+
+        <div class="heroButtons">
+          {% if not current_user.is_authenticated %}
+          <a class="btn btn--primary" href="{{ url_for('student') }}"
+            >I'm a student</a
+          >
+          <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
+            >I'm a lab member</a
+          >
+          {% endif %}
+        </div>
+
+        <br />
+
+        <!--        <div class="loginButtons">-->
+        <!--          <p class="heroSubtitle">-->
+        <!--            Already have an Account?-->
+        <!--          </p>-->
+        <!--          <a class="btn btn&#45;&#45;login"  href="{{ url_for('login') }}">Login</a>-->
+        <!--        </div>-->
+      </div>
+      <div class="heroPic">
+        <img
+          src="{{ url_for('static', filename='images/yale.jpg') }}"
+          alt="Yale University Campus"
+          style="
+            max-width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            margin: 20px 0;
+          "
+        />
+      </div>
+    </main>
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+
+    <script>
+      "use strict";
+
+      class LabsHero extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { visible: false };
+        }
+
+        componentDidMount() {
+          setTimeout(() => {
+            this.setState({ visible: true });
+          }, 50);
+        }
+
+        render() {
+          const transClass =
+            "heroFade" + (this.state.visible ? " heroFade--visible" : "");
+
+          const titleElement = React.createElement(
+            "h1",
+            { className: "heroTitle" },
+            "an easier way to research research."
+          );
+
+          const subtitleElement = React.createElement(
+            "p",
+            { className: "heroSubtitle" },
+            "LabsAtYale is a platform designed to help you find a research lab more efficiently."
+          );
+
+          const divElement = React.createElement(
+            "div",
+            { className: transClass },
+            titleElement,
+            subtitleElement
+          );
+
+          return divElement;
+        }
+      }
+
+      const heroRoot = document.getElementById("hero-root");
+      if (heroRoot !== null) {
+        ReactDOM.render(React.createElement(LabsHero, null), heroRoot);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}"> LabsAtYale </a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.role == 'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          <a
+            href="{{ url_for('faculty_fellowships') }}"
+            class="{% if request.path == '/faculty/fellowships' %}active{% endif %}"
+            >Ranking</a
+          >
+          <a href="{{ url_for('faculty_all_applicants') }}" class="{% if request.path == '/faculty/applicants' %}active{% endif %}">Applicants</a>
+<!--          {% if fellowship_id %}<a-->
+<!--            href="{{ url_for('faculty_fellowship_applicants', fellowship_id=fellowship_id) }}"-->
+<!--            class="{% if request.path == '/faculty/fellowship' %}active{% endif %}"-->
+<!--            >Applicants</a-->
+<!--          >{% endif %} -->
+          {% endif %}
+          {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+    <div class="container profile-card">
+      <h2 class="profile-header">Add a Fellowship Below</h2>
+      <form
+        id="register-form"
+        method="post"
+        action="{{ url_for('add_fellowship') }}"
+      >
+        <div class="form-row">
+          <label for="fellow-input">Fellowship Name:</label>
+          <input type="text" id="fellow-input" name="fellow_name" />
+        </div>
+
+        <div class="form-row">
+          <label>Class Year:</label>
+          <div class="checkbox-group">
+            <label
+              ><input type="checkbox" name="class_year[]" value="2026" />
+              2026</label
+            >
+            <label
+              ><input type="checkbox" name="class_year[]" value="2027" />
+              2027</label
+            >
+            <label
+              ><input type="checkbox" name="class_year[]" value="2028" />
+              2028</label
+            >
+            <label
+              ><input type="checkbox" name="class_year[]" value="2029" />
+              2029</label
+            >
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="description">Description:</label>
+          <input type="text" id="description" name="description" />
+        </div>
+
+        <div class="form-row">
+          <label for="deadline">Deadline:</label>
+          <input type="date" id="deadline" name="deadline" />
+        </div>
+
+        <div class="form-row">
+          <label for="stipend">Stipend:</label>
+          <input type="text" id="stipend" name="stipend" />
+        </div>
+
+        <div class="submit-button">
+          <button type="submit" class="btn-primary">Submit</button>
+        </div>
+
+        {% if msg %}
+        <p style="text-align: center"><strong>{{msg}}</strong></p>
+        {% endif %}
+      </form>
+    </div>
+  </body>
+</html>

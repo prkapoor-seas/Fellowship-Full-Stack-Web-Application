@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}"> LabsAtYale </a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.role == 'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          <a
+            href="{{ url_for('faculty_fellowships') }}"
+            class="{% if request.path == '/faculty/fellowships' %}active{% endif %}"
+            >Ranking</a
+          >
+          <a
+            href="{{ url_for('faculty_all_applicants') }}"
+            class="{% if request.path == '/faculty/applicants' %}active{% endif %}"
+            >Applicants</a
+          >
+          <!--          {% if fellowship_id %}<a-->
+          <!--            href="{{ url_for('faculty_fellowship_applicants', fellowship_id=fellowship_id) }}"-->
+          <!--            class="{% if request.path == '/faculty/fellowship' %}active{% endif %}"-->
+          <!--            >Applicants</a-->
+          <!--          >{% endif %} -->
+          {% endif %} {% if current_user.role == 'student' %}
+          <a
+            href="{{ url_for('applications') }}"
+            class="{% if request.path == '/applications' %}active{% endif %}"
+            >Applications</a
+          >
+          <a
+            href="{{ url_for('saved_fellowships') }}"
+            class="{% if request.path == '/saved_fellowships' %}active{% endif %}"
+            >Saved Fellowships</a
+          >
+          {% endif %} {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+    <div class="container profile-card">
+      <h2 class="profile-header">Profile Information</h2>
+      <form
+        id="edit-form"
+        method="POST"
+        action="{{ url_for('update_profile') }}"
+      >
+        <div class="form-row">
+          <label for="first-input">First Name:</label>
+          <input
+            type="text"
+            id="first-input"
+            name="first_name"
+            value="{{user.first_name}}"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="last-input">Last Name:</label>
+          <input
+            type="text"
+            id="last-input"
+            name="last_name"
+            value="{{user.last_name}}"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="netid-input">NetID:</label>
+          <input
+            type="text"
+            id="netid-input"
+            value="{{user.net_id}}"
+            disabled
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="email-input">Email:</label>
+          <input
+            type="email"
+            id="email-input"
+            value="{{user.email}}"
+            disabled
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="role-input">Role:</label>
+          <input
+            type="text"
+            id="role-input"
+            value="{{user.role |capitalize}}"
+            disabled
+          />
+        </div>
+
+        {% if student_info %}
+        {% set major_list = [
+          'African American Studies',
+          'African Studies',
+          'American Studies',
+          'Anthropology',
+          'Applied Mathematics',
+          'Applied Physics',
+          'Archaeological Studies',
+          'Architecture',
+          'Art',
+          'Astronomy',
+          'Astrophysics',
+          'Biomedical Engineering',
+          'Chemical Engineering',
+          'Chemistry',
+          'Classical Civilization',
+          'Classics',
+          'Cognitive Science',
+          'Comparative Literature',
+          'Computer Science',
+          'Computer Science & Economics',
+          'Computer Science & Mathematics',
+          'Computer Science & Psychology',
+          'Computing and Linguistics',
+          'Computing and the Arts',
+          'Earth and Planetary Sciences',
+          'East Asian Languages & Literatures',
+          'East Asian Studies',
+          'Ecology & Evolutionary Biology',
+          'Economics',
+          'Economics & Mathematics',
+          'Electrical Engineering',
+          'Electrical Engineering & Computer Science',
+          'English',
+          'Environmental Engineering',
+          'Environmental Studies',
+          'Ethics, Politics & Economics',
+          'Ethnicity, Race & Migration',
+          'Film and Media Studies',
+          'French',
+          'German Studies',
+          'Global Affairs',
+          'Greek, Ancient and Modern',
+          'History',
+          'History of Art',
+          'History of Science, Medicine, and Public Health',
+          'Humanities',
+          'Italian Studies',
+          'Judaic Studies',
+          'Latin American Studies',
+          'Linguistics',
+          'Mathematics',
+          'Mathematics & Philosophy',
+          'Mathematics & Physics',
+          'Mechanical Engineering',
+          'Modern Middle East Studies',
+          'Molecular Biophysics & Biochemistry',
+          'Molecular, Cellular, & Developmental Biology',
+          'Music',
+          'Near Eastern Languages & Civilizations',
+          'Neuroscience',
+          'Philosophy',
+          'Physics',
+          'Physics & Geosciences',
+          'Physics & Philosophy',
+          'Political Science',
+          'Portuguese',
+          'Psychology',
+          'Religious Studies',
+          'Russian',
+          'Russian, East European, and Eurasian Studies',
+          'Sociology',
+          'South Asian Studies',
+          'Spanish',
+          'Special Divisional Major',
+          'Statistics and Data Science',
+          'Theater and Performance Studies',
+          'Urban Studies',
+          'Women\'s, Gender, & Sexuality Studies',
+          'Other'
+        ] %}
+
+        <div class="form-row">
+          <label for="major-input">Major:</label>
+          <select
+            id="major-input"
+            name="major"
+          >
+            <option value="" {% if not student_info.major %}selected{% endif %}>Select a major</option>
+            {% for major in major_list %}
+            <option value="{{ major }}" {% if student_info.major == major %}selected{% endif %}>{{ major }}</option>
+            {% endfor %}
+            {% if student_info.major and student_info.major not in major_list %}
+            <option value="{{ student_info.major }}" selected>{{ student_info.major }}</option>
+            {% endif %}
+          </select>
+        </div>
+
+        {% set class_year_list = ['2029', '2028', '2027', '2026'] %}
+        <div class="form-row">
+          <label for="class-year-input">Class Year:</label>
+          <select
+            id="class-year-input"
+            name="class_year"
+          >
+            <option value="" {% if not student_info.class_year %}selected{% endif %}>Select class year</option>
+            {% for class_year in class_year_list %}
+            <option value="{{ class_year }}" {% if student_info.class_year == class_year %}selected{% endif %}>{{ class_year }}</option>
+            {% endfor %}
+            {% if student_info.class_year and student_info.class_year not in class_year_list %}
+            <option value="{{ student_info.class_year }}" selected>{{ student_info.class_year }}</option>
+            {% endif %}
+          </select>
+        </div>
+        {% endif %} {% if faculty_info %}
+        <div class="form-row">
+          <label for="department-input">Department:</label>
+          <input
+            type="text"
+            id="department-input"
+            value="{{faculty_info.department}}"
+            disabled
+          />
+        </div>
+
+        {% if faculty_info.labs %} {% for lab in faculty_info.labs %}
+        <div class="form-row">
+          <label>Lab Name:</label>
+          <input type="text" value="{{lab.lab_name}}" disabled />
+        </div>
+        <div class="form-row">
+          <label>Location:</label>
+          <input type="text" value="{{lab.location}}" disabled />
+        </div>
+        <div class="form-row">
+          <label>Website:</label>
+          <input type="text" value="{{lab.website}}" disabled />
+        </div>
+        <div class="form-row">
+          <label>Description:</label>
+          <textarea
+            style="
+              width: 60%;
+              padding: 8px 10px;
+              border: 1px solid #bbb;
+              border-radius: 6px;
+              font-size: 1rem;
+              font-family: Gill Sans, sans-serif;
+            "
+            disabled
+          >
+{{lab.description}}</textarea
+          >
+        </div>
+        {% endfor %} {% endif %} {% endif %} {% if current_user.role ==
+        'student' %}
+        <div class="form-row">
+          <label for="email-notify" class="inline-checkbox-label">
+            Turn on Emails for new fellowship postings:
+            <input
+              type="checkbox"
+              id="email-notify"
+              name="email_notifications"
+              {%
+              if
+              email_subscribed
+              %}checked{%
+              endif
+              %}
+            />
+          </label>
+        </div>
+
+        {% endif %}
+
+        <div
+          style="
+            padding-left: 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 20px;
+          "
+        >
+          <button
+            type="submit"
+            style="
+              padding: 10px 18px;
+              background-color: #1976d2;
+              color: white;
+              border: none;
+              border-radius: 10px;
+              cursor: pointer;
+              font-weight: 500;
+            "
+          >
+            Save Changes
+          </button>
+        </div>
+
+            <div style="margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    padding-right: 20px;">
+              <a
+                href="{{ url_for('change_password') }}"
+                style="
+                  padding: 9px 16px;
+                  background-color: #546e7a;
+                  color: white;
+                  border-radius: 10px;
+                  text-decoration: none;
+                  font-weight: 500;
+                  font-size: 14px;
+                  line-height: 1;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  cursor: pointer;
+                "
+              >
+                Change Password
+              </a>
+            </div>
+
+      </form>
+
+      {% if current_user.role == 'student' %}
+      <form
+        id="resume-form"
+        enctype="multipart/form-data"
+        method="POST"
+        action="{{ url_for('upload_resume') }}"
+        style="margin-top: 20px"
+      >
+        {% if resume_info %}
+
+        <!--        <div class="form-row">-->
+        <!--            <label>Resume:</label>-->
+        <!--            <div style="display: flex; gap: 15px; align-items: center; width: 60%;">-->
+        <!--              <span>{{ resume_info.filename }}</span>-->
+        <!--              <a href="{{ url_for('download_resume') }}" class="btn-primary" style="display: inline-block; padding: 8px 14px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 10px; font-size: 14px;">-->
+        <!--                Download-->
+        <!--              </a>-->
+        <!--            </div>-->
+        <!--          </div>-->
+
+        <div class="form-row" style="margin-top: 15px">
+          <label>Replace Resume:</label>
+          <div
+            style="display: flex; gap: 10px; align-items: center; width: 60%"
+          >
+            <input
+              type="file"
+              id="resume-input"
+              name="resume"
+              accept=".pdf"
+              required
+              style="width: 300px"
+            />
+            <button
+              type="submit"
+              class="btn-primary"
+              style="
+                padding: 8px 14px;
+                background-color: #546e7a;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 14px;
+              "
+            >
+              Upload
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px">
+          <iframe
+            src="{{ url_for('view_resume') }}"
+            width="100%"
+            height="600px"
+            style="border: 1px solid #ccc; border-radius: 8px"
+          >
+          </iframe>
+        </div>
+
+        {% else %}
+
+        <div class="form-row">
+          <label>Resume:</label>
+          <div
+            style="display: flex; gap: 10px; align-items: center; width: 60%"
+          >
+            <input
+              type="file"
+              id="resume-input"
+              name="resume"
+              accept=".pdf"
+              required
+              style="width: 300px"
+            />
+            <button
+              type="submit"
+              class="btn-primary"
+              style="
+                padding: 8px 14px;
+                background-color: #1976d2;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 14px;
+              "
+            >
+              Upload
+            </button>
+          </div>
+        </div>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+  </body>
+</html>

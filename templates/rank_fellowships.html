@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rank Your Fellowships - Labs at Yale</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="inner_topbar">
+      <div class="logo">
+        <a class="logotext" href="{{ url_for('index') }}">LabsAtYale</a>
+      </div>
+      <nav class="navigationBar">
+        <a href="{{ url_for('fellowships') }}" class="{% if request.path == '/fellowships' %}active{% endif %}">Fellowships</a>
+        <a href="{{ url_for('labs') }}" class="{% if request.path == '/labs' %}active{% endif %}">Labs</a>
+        <a href="{{ url_for('faculty') }}" class="{% if request.path == '/faculty' %}active{% endif %}">Faculty</a>
+
+        {% if current_user.role == 'student' %}
+          <a href="{{ url_for('applications') }}" class="{% if request.path == '/applications' %}active{% endif %}">Applications</a>
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('profile') }}" class="{% if request.path == '/profile' %}active{% endif %}">Profile</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 800px; margin: 30px auto; padding: 20px;">
+    <h2>Rank Your Fellowships</h2>
+    <p>Drag and drop to rank your applied fellowships in order of preference. #1 is your most preferred.</p>
+
+    {% if applications %}
+        <form method="POST" id="rankForm" onsubmit="return beforeSubmit();">
+            <div id="applicationsContainer" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                {% for app in applications %}
+                    <div class="fellowship-item" draggable="true" style="
+                        padding: 12px;
+                        margin-bottom: 10px;
+                        background: #f5f5f5;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        cursor: move;
+                    " data-fellowship-id="{{ app.fellowship_id }}">
+                        <strong>{{ app.fellowship_name }}</strong> - {{ app.lab_name }}
+                        <br><small>Faculty: {{ app.faculty_name }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 15px; background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Save Rankings</button>
+        </form>
+
+        <script>
+        let draggedElement = null;
+
+        function initializeDragDrop() {
+            document.querySelectorAll('.fellowship-item').forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedElement = item;
+                    item.style.opacity = '0.5';
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    item.style.opacity = '1';
+                });
+
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedElement !== item) {
+                        const container = document.getElementById('applicationsContainer');
+                        const allItems = Array.from(container.querySelectorAll('.fellowship-item'));
+                        const draggedIndex = allItems.indexOf(draggedElement);
+                        const targetIndex = allItems.indexOf(item);
+
+                        if (draggedIndex < targetIndex) {
+                            item.parentNode.insertBefore(draggedElement, item.nextSibling);
+                        } else {
+                            item.parentNode.insertBefore(draggedElement, item);
+                        }
+                    }
+                });
+            });
+        }
+
+        function beforeSubmit() {
+            const container = document.getElementById('applicationsContainer');
+            const items = container.querySelectorAll('.fellowship-item');
+            const form = document.getElementById('rankForm');
+            
+            form.querySelectorAll('input[type="hidden"]').forEach(input => input.remove());
+                items.forEach((item) => {
+                const fellowshipId = item.getAttribute('data-fellowship-id');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'fellowship_rank[]';
+                input.value = fellowshipId;
+                form.appendChild(input);
+            });
+            
+            return true;  
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeDragDrop);
+        </script>
+
+        <style>
+            .fellowship-item:hover {
+                background: #e8e8e8;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        </style>
+    {% else %}
+        <p>You have not applied to any fellowships yet. <a href="{{ url_for('fellowships') }}">Browse fellowships</a></p>
+    {% endif %}
+  </main>
+</body>
+</html>

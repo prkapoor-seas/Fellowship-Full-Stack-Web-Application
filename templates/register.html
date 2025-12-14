@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}"> LabsAtYale </a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+    <div class="container profile-card">
+      <h2 class="profile-header">Register Your Details</h2>
+      <form id="register-form" method="post" action="{{ url_for('register') }}">
+        <div class="form-row">
+          <label for="first-input">First Name:</label>
+          <input type="text" id="first-input" name="first_name" />
+        </div>
+
+        <div class="form-row">
+          <label for="last-input">Last Name:</label>
+          <input type="text" id="last-input" name="last_name" />
+        </div>
+
+        <div class="form-row">
+          <label for="netid-input">NetID:</label>
+          <input type="text" id="netid-input" name="net_id" />
+        </div>
+
+        <div class="form-row">
+          <label for="email-input">Email:</label>
+          <input type="email" id="email-input" name="email" />
+        </div>
+
+        <div class="form-row">
+          <label for="password-input">Password:</label>
+          <input type="password" id="password-input" name="password" />
+        </div>
+
+        <div class="form-row">
+          <label for="role-input">Role:</label>
+          <input
+            type="text"
+            id="role-input"
+            value="{{role}}"
+            name="role"
+            readonly
+          />
+        </div>
+        {% if role == "Student" %} {% set major_list = [ 'African American
+        Studies', 'African Studies', 'American Studies', 'Anthropology',
+        'Applied Mathematics', 'Applied Physics', 'Archaeological Studies',
+        'Architecture', 'Art', 'Astronomy', 'Astrophysics', 'Biomedical
+        Engineering', 'Chemical Engineering', 'Chemistry', 'Classical
+        Civilization', 'Classics', 'Cognitive Science', 'Comparative
+        Literature', 'Computer Science', 'Computer Science & Economics',
+        'Computer Science & Mathematics', 'Computer Science & Psychology',
+        'Computing and Linguistics', 'Computing and the Arts', 'Earth and
+        Planetary Sciences', 'East Asian Languages & Literatures', 'East Asian
+        Studies', 'Ecology & Evolutionary Biology', 'Economics', 'Economics &
+        Mathematics', 'Electrical Engineering', 'Electrical Engineering &
+        Computer Science', 'English', 'Environmental Engineering',
+        'Environmental Studies', 'Ethics, Politics & Economics', 'Ethnicity,
+        Race & Migration', 'Film and Media Studies', 'French', 'German Studies',
+        'Global Affairs', 'Greek, Ancient and Modern', 'History', 'History of
+        Art', 'History of Science, Medicine, and Public Health', 'Humanities',
+        'Italian Studies', 'Judaic Studies', 'Latin American Studies',
+        'Linguistics', 'Mathematics', 'Mathematics & Philosophy', 'Mathematics &
+        Physics', 'Mechanical Engineering', 'Modern Middle East Studies',
+        'Molecular Biophysics & Biochemistry', 'Molecular, Cellular, &
+        Developmental Biology', 'Music', 'Near Eastern Languages &
+        Civilizations', 'Neuroscience', 'Philosophy', 'Physics', 'Physics &
+        Geosciences', 'Physics & Philosophy', 'Political Science', 'Portuguese',
+        'Psychology', 'Religious Studies', 'Russian', 'Russian, East European,
+        and Eurasian Studies', 'Sociology', 'South Asian Studies', 'Spanish',
+        'Special Divisional Major', 'Statistics and Data Science', 'Theater and
+        Performance Studies', 'Urban Studies', 'Women\'s, Gender, & Sexuality
+        Studies', 'Other' ] %}
+        <div class="form-row">
+          <label for="major-input">Major:</label>
+          <select id="major-input" name="major">
+            <option value="" selected>Select a major</option>
+            {% for major in major_list %}
+            <option value="{{ major }}">{{ major }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% set class_year_list = ['2029', '2028', '2027', '2026'] %}
+        <div class="form-row">
+          <label for="class-year-input">Class Year:</label>
+          <select id="class-year-input" name="class_year">
+            <option value="" selected>Select class year</option>
+            {% for class_year in class_year_list %}
+            <option value="{{ class_year }}">{{ class_year }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% elif role == "Faculty" %}
+        <div class="form-row">
+          <label for="discipline-input">Discipline:</label>
+          <input type="text" id="discipline-input" name="discipline" />
+        </div>
+
+        <div class="form-row">
+          <label for="lab-name-input">Lab Name:</label>
+          <input type="text" id="lab-name-input" name="lab_name" />
+        </div>
+
+        <div class="form-row">
+          <label for="lab-description-input">Lab Description:</label>
+          <input
+            type="text"
+            id="lab-description-input"
+            name="lab_description"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="lab-website-input">Lab Website:</label>
+          <input type="text" id="lab-website-input" name="lab_website" />
+        </div>
+
+        <div class="form-row">
+          <label for="lab-location-input">Lab Location:</label>
+          <input type="text" id="lab-location-input" name="location" />
+        </div>
+
+        {% endif %}
+        <div class="submit-button">
+          <button type="submit" class="btn-primary">Submit</button>
+        </div>
+
+        {% if msg %}
+        <p style="text-align: center"><strong>{{msg}}</strong></p>
+        {% endif %}
+      </form>
+    </div>
+  </body>
+</html>

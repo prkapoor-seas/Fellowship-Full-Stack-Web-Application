@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Fellowships - Labs at Yale</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="inner_topbar">
+        <div class="logo">
+          <a class="logotext" href="{{ url_for('index') }}">LabsAtYale</a>
+        </div>
+        <nav class="navigationBar">
+          <a
+            href="{{ url_for('fellowships') }}"
+            class="{% if request.path == '/fellowships' %}active{% endif %}"
+            >Fellowships</a
+          >
+          <a
+            href="{{ url_for('labs') }}"
+            class="{% if request.path == '/labs' %}active{% endif %}"
+            >Labs</a
+          >
+          <a
+            href="{{ url_for('faculty') }}"
+            class="{% if request.path == '/faculty' %}active{% endif %}"
+            >Faculty</a
+          >
+
+          {% if current_user.role == 'faculty' %}
+          <a href="{{ url_for('add_fellowship') }}">Add a Fellowship</a>
+          <a
+            href="{{ url_for('faculty_fellowships') }}"
+            class="{% if request.path == '/faculty/fellowships' %}active{% endif %}"
+            >Ranking</a
+          >
+          <a
+            href="{{ url_for('faculty_all_applicants') }}"
+            class="{% if request.path == '/faculty/applicants' %}active{% endif %}"
+            >Applicants</a
+          >
+          {% endif %} {% if current_user.role == 'student' %}
+          <a
+            href="{{ url_for('applications') }}"
+            class="{% if request.path == '/applications' %}active{% endif %}"
+            >Applications</a
+          >
+          {% endif %} {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('profile') }}"
+            class="{% if request.path == '/profile' %}active{% endif %}"
+            >Profile</a
+          >
+          <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1>All Fellowship Applicants</h1>
+
+      {% if fellowship_data|length == 0 %}
+      <h2>You have not created any fellowships yet.</h2>
+      {% else %} {% for item in fellowship_data %}
+      <section class="fellowship-table">
+        <h2>{{ item.fellowship.get_fellowship_name() }}</h2>
+        <p><strong>Lab:</strong> {{ item.fellowship.get_lab_name() }}</p>
+        <p><strong>Deadline:</strong> {{ item.fellowship.get_deadline() }}</p>
+        <p>
+          <strong>Class Years:</strong> {{ item.fellowship.get_class_years() }}
+        </p>
+
+        {% if item.applicants|length == 0 %}
+        <p style="color: #999">No applications yet for this fellowship.</p>
+        {% else %}
+        <div class="extend-table">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Net ID</th>
+                <th>Email</th>
+                <th>Major</th>
+                <th>Class Year</th>
+                <th>Status</th>
+                <th>Applied At</th>
+                <th>Questions / Statement</th>
+                <th>Resume</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in item.applicants %}
+              <tr>
+                <td>
+                  {{ a.get_student_first_name() }} {{ a.get_student_last_name()
+                  }}
+                </td>
+                <td>{{ a.get_student_net_id() }}</td>
+                <td>{{ a.get_email() }}</td>
+                <td>{{ a.get_major() }}</td>
+                <td>{{ a.get_class_year() }}</td>
+                <td>{{ a.get_status() }}</td>
+                <td>{{ a.get_applied_at() }}</td>
+                <td>{{ a.get_questions() }}</td>
+                <td>
+                  <a
+                    href="{{ url_for('view_resume_student', student_net_id=a.get_student_net_id()) }}"
+                    class="btn btn-primary"
+                    target="_blank"
+                  >
+                    View Resume
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </section>
+      {% endfor %} {% endif %}
+    </main>
+  </body>
+</html>
