@@ -1,0 +1,3 @@
+APP_SECRET_KEY = b'\xcdt\x8dn\xe1\xbdW\x9d[}yJ\xfc\xa3~/'
+
+
