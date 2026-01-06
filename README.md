@@ -48,21 +48,4 @@ Students and faculty also have a Profile page to update their information includ
 
 ![Profile Page](/readme/ProfilePage.png)
 
-## 5. Users in the Database and their password
-
-The following are the users in the Database and their login credentials. Changing a password using "Forgot My Password" on the login page sends the user an email to reset their password.
-
-|             Name |  Net ID |    Role | Password |
-|-----------------:|--------:|--------:|---------:|
-|    Pranay Kapoor |   prk25 | Student |   123456 |
-| Tesca Fitzgerald |  tsc123 | Faculty |   123456 |
-|       Alan Weide |  adw123 | Faculty |   123456 |
-|     Theodore Kim | tkim123 | Faculty |   123456 |
-|  Marynel Vazquez |  mvz123 | Faculty |   123456 |
-|        Alex Wong |  alx123 | Faculty |   123456 |
-|         Rex Ying | ryin123 | Faculty |   123456 |
-|      Arman Cohan |  aco123 | Faculty |   123456 |
-|   Yongshang Ding |  ydi123 | Faculty |   123456 |
-|    Teresa Nguyen |  ter123 | Student |   123456 |
-
 
