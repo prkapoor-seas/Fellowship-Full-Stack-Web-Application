@@ -18,6 +18,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from keys import APP_SECRET_KEY
 import io
+import os
 
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -103,12 +104,6 @@ def withdraw_application(fellowship_id):
 @login_required
 def delete_fellowship_route(fellowship_id):
     fellowship = get_fellowship_by_id(fellowship_id)
-    
-    # faculty_fellowships = get_fellowships_by_faculty(current_user.net_id)
-    # if not any(f.fellowship_id == fellowship_id for f in faculty_fellowships):
-    #     flash("You don't have permission to delete this fellowship.", "danger")
-    #     return redirect(url_for('faculty_fellowships'))
-    
     if delete_fellowship(fellowship_id):
         flash(f"Fellowship '{fellowship.get_fellowship_name()}' has been removed.", "success")
     else:
@@ -783,8 +778,8 @@ def notify_users(fellow_name, class_years):
 
 def send_signup_email(email, first_name):
     try:
-        smtp_email = "labsatyale@gmail.com"
-        smtp_password = "ncozncushzevtgts"
+        smtp_email = os.environ.get("SMTP_EMAIL")
+        smtp_password = os.environ.get("SMTP_PASSWORD")
 
         subject = "Welcome to LabsAtYale 🎉"
         body = f"""
@@ -832,8 +827,8 @@ def send_password_reset_email(email):
     token = generate_reset_token(email)
     reset_url = url_for('reset_password', token=token, _external=True)
 
-    smtp_email = "labsatyale@gmail.com"
-    smtp_password = "ncozncushzevtgts"
+    smtp_email = os.environ.get("SMTP_EMAIL")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
 
     subject = "Reset your LabsAtYale password"
     body = f"""
