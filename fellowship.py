@@ -1,5 +1,3 @@
-import json
-import random
 from contextlib import closing
 from sqlite3 import connect
 
@@ -14,7 +12,7 @@ from database import get_faculty_information, get_labs_information, get_fellowsh
     save_fellowship, unsave_fellowship, get_saved_fellowship_ids, is_fellowship_saved, get_saved_fellowships, \
     delete_application, delete_fellowship, get_notification_subscribers, \
     subscribe_to_notifications, unsubscribe_from_notifications, is_subscribed, get_applied_fellowships
-from ab_test_log import write_ab_log
+import ab_testing
 from matching import run_matching
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -29,56 +27,30 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import smtplib
 
-from datetime import datetime
 app = Flask(__name__)
 app.secret_key = APP_SECRET_KEY
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-with open("ab_tests.json", "r") as f:
-    AB_TESTS = json.load(f)
+# Registers the before_request hook that assigns each visitor a variant for
+# every test defined in ab_tests.json. See ab_testing.py.
+ab_testing.init_app(app)
 
 # @app.before_request
 # def clear_stale_session():
 #     if not current_user.is_authenticated:
 #         session.clear()
 
-@app.before_request
-def ab_test_middleware():
-    if "signup_box_test" not in session:
-        variants = list(
-            AB_TESTS["signup_box_test"]["variants"].keys()
-        )
-        session["signup_box_test"] = random.choice(variants)
-
 @login_manager.user_loader
 def load_user(net_id):
     return get_user_by_netid([net_id])
 
-def _ab_test_log(test_name, variant):
-    write_ab_log({
-        "event": "variation_presented",
-        "test": test_name,
-        "variant": variant,
-        "timestamp": datetime.now().isoformat()
-    })
-
-def _event_logger(event_name):
-    write_ab_log({
-        "event": event_name,
-        "test": "signup_box_test",
-        "variant": session.get("signup_box_test"),
-        "timestamp": datetime.now().isoformat()
-    })
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def index():
-    variant = session["signup_box_test"]
-    _ab_test_log(
-        "signup_box_test",
-        variant
-    )
+    variant = ab_testing.get_variant("signup_box_test")
+    ab_testing.ab_test_log("signup_box_test", variant)
     html = render_template('index.html', variant=variant)  # Can get token with cas.token
     response = make_response(html)
     return response
@@ -338,12 +310,12 @@ def applications():
 
 @app.route('/student')
 def student():
-    _event_logger("student_signup_click")
+    ab_testing.event_logger("student_signup_click", "signup_box_test")
     return render_template('register.html', role="Student")
 
 @app.route('/lab_member')
 def lab_member():
-    _event_logger("lab_member_signup_click")
+    ab_testing.event_logger("lab_member_signup_click", "signup_box_test")
     return render_template('register.html', role="Faculty")
 
 @app.route('/add_fellowship', methods=['GET', 'POST'])
@@ -790,8 +762,8 @@ def notify_users(fellow_name, class_years):
             print("No valid email addresses found.")
             return
 
-        smtp_email = "labsatyale@gmail.com"
-        smtp_password = "ncozncushzevtgts"
+        smtp_email = os.environ.get("SMTP_EMAIL")
+        smtp_password = os.environ.get("SMTP_PASSWORD")
 
         if not smtp_email or not smtp_password:
             print("SMTP_EMAIL and SMTP_PASSWORD environment variables not set")
