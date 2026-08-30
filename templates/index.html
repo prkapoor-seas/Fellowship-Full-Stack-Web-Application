@@ -69,42 +69,46 @@
     </header>
 
     <main class="hero">
-      <div class="heroStuff">
-        <div id="hero-root"></div>
-        <!-- <h1 class="heroTitle">An easier way to research research.</h1>
-        <p class="heroSubtitle">
-          LabsAtYale is a platform designed to help you find a research lab more
-          efficiently.
-        </p> -->
-            {% if variant == "A" %}
-            <div class="registrationBox">
-                <h2 class="registrationTitle">Register your details</h2>
-                    <div class="heroButtons">
-                      {% if not current_user.is_authenticated %}
-                      <a class="btn btn--primary" href="{{ url_for('student') }}"
-                        >I'm a student</a
-                      >
-                      <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
-                        >I'm a lab member</a
-                      >
-                      {% endif %}
-                    </div>
-            </div>
-            {% else %}
-                <div class="heroButtons">
-                  {% if not current_user.is_authenticated %}
-                  <a class="btn btn--primary" href="{{ url_for('student') }}"
-                    >I'm a student</a
-                  >
-                  <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
-                    >I'm a lab member</a
-                  >
-                  {% endif %}
-                </div>
-            {% endif %}
-        <br />
-      </div>
-      <div class="heroPic">
+  <div class="heroStuff">
+    <div id="hero-root"></div>
+
+    {% if not current_user.is_authenticated %}
+
+      {% if variant == "A" %}
+
+        <div class="registrationBox">
+          <h2 class="registrationTitle">Register your details</h2>
+
+          <div class="heroButtons">
+            <a class="btn btn--primary" href="{{ url_for('student') }}">
+              I'm a student
+            </a>
+
+            <a class="btn btn--ghost" href="{{ url_for('lab_member') }}">
+              I'm a lab member
+            </a>
+          </div>
+        </div>
+
+      {% else %}
+
+        <div class="heroButtons">
+          <a class="btn btn--primary" href="{{ url_for('student') }}">
+            I'm a student
+          </a>
+
+          <a class="btn btn--ghost" href="{{ url_for('lab_member') }}">
+            I'm a lab member
+          </a>
+        </div>
+
+      {% endif %}
+
+    {% endif %}
+
+    <br />
+  </div>
+        <div class="heroPic">
         <img
           src="{{ url_for('static', filename='images/yale.jpg') }}"
           alt="Yale University Campus"

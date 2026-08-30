@@ -203,7 +203,6 @@ def faculty_all_applicants():
     fellowships = get_fellowships_by_faculty(faculty_net_id)
     
     fellowship_data = _build_fellowship_data(faculty_net_id, fellowships)
-    print(1)
 
     return render_template('fellowship_applicants.html', fellowship_data=fellowship_data)
 
@@ -541,7 +540,23 @@ def profile():
 @login_required
 def change_password():
     if request.method == 'POST':
-        new_password = request.form['password']
+        old_password = request.form['old_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_new_password']
+
+        user = get_user_by_netid_password([current_user.get_net_id(), old_password])
+
+        if not user:
+            return render_template(
+                'change_password.html',
+                msg="Your old password is incorrect."
+            )
+
+        if new_password != confirm_password:
+            return render_template(
+                'change_password.html',
+                msg="New passwords do not match."
+            )
 
         with connect('labsatyale.sqlite') as conn:
             cursor = conn.cursor()
@@ -697,11 +712,11 @@ def update_profile():
         current_user.last_name = last_name
 
         # Handle email notification subscription after main transaction
-        email_notifications = request.form.get('email_notifications')
-        if email_notifications:
-            subscribe_to_notifications(current_user.net_id)
-        else:
-            unsubscribe_from_notifications(current_user.net_id)
+        email_notifications = request.form.get("email_notifications")
+        if email_notifications == "on":
+            subscribe_to_notifications(current_user.get_net_id())
+        elif email_notifications == "off":
+            unsubscribe_from_notifications(current_user.get_net_id())
 
         flash("Profile updated successfully!", "success")
     except Exception as e:
@@ -758,24 +773,20 @@ def view_matches():
     )
 
 def notify_users(fellow_name, class_years):
-    print("in this loop...")
     try:
         subscribers = get_notification_subscribers()
         if not subscribers:
-            print("No subscribers to notify.")
             return
 
         emails = [s[1] for s in subscribers if s[1]]
         print(emails)
         if not emails:
-            print("No valid email addresses found.")
             return
 
         smtp_email = os.environ.get("SMTP_EMAIL")
         smtp_password = os.environ.get("SMTP_PASSWORD")
 
         if not smtp_email or not smtp_password:
-            print("SMTP_EMAIL and SMTP_PASSWORD environment variables not set")
             flash(f"Notification system not configured. Please set SMTP_EMAIL and SMTP_PASSWORD environment variables.", "warning")
             return
 
@@ -790,7 +801,6 @@ def notify_users(fellow_name, class_years):
         msg.attach(MIMEText(text))
         smtp.sendmail(from_addr=smtp_email, to_addrs=emails, msg=msg.as_string())
         smtp.quit()
-        print("Ok it worked!")
     except Exception as e:
         print(f"Error notifying users: {e}")
 
@@ -823,8 +833,6 @@ If you did not create this account, please contact us immediately.
         smtp.login(smtp_email, smtp_password)
         smtp.sendmail(smtp_email, email, msg.as_string())
         smtp.quit()
-
-        print("Signup email sent")
 
     except Exception as e:
         print(f"Error sending signup email: {e}")

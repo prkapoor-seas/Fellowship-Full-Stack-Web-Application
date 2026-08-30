@@ -73,6 +73,17 @@
       </div>
     </header>
     <div class="container profile-card">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <p class="flash-message {{ category }}">
+              {{ message }}
+            </p>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
       <h2 class="profile-header">Profile Information</h2>
       <form
         id="edit-form"
@@ -284,25 +295,37 @@
 {{lab.description}}</textarea
           >
         </div>
-        {% endfor %} {% endif %} {% endif %} {% if current_user.role ==
-        'student' %}
-        <div class="form-row">
-          <label for="email-notify" class="inline-checkbox-label">
-            Turn on Emails for new fellowship postings:
-            <input
-              type="checkbox"
-              id="email-notify"
-              name="email_notifications"
-              {%
-              if
-              email_subscribed
-              %}checked{%
-              endif
-              %}
-            />
-          </label>
-        </div>
+        {% endfor %} {% endif %} {% endif %}
 
+      {% if current_user.role == 'student' %}
+        <div class="email-notification-section">
+          <div>
+            <h3>Email Notifications</h3>
+            <p>
+              Receive an email when new fellowship opportunities are posted.
+            </p>
+          </div>
+
+          {% if email_subscribed %}
+            <button
+              type="submit"
+              name="email_notifications"
+              value="off"
+              class="btn-email btn-email--off"
+            >
+              Turn Off Emails
+            </button>
+          {% else %}
+            <button
+              type="submit"
+              name="email_notifications"
+              value="on"
+              class="btn-email btn-email--on"
+            >
+              Turn On Emails
+            </button>
+          {% endif %}
+        </div>
         {% endif %}
 
         <div
@@ -366,16 +389,6 @@
         style="margin-top: 20px"
       >
         {% if resume_info %}
-
-        <!--        <div class="form-row">-->
-        <!--            <label>Resume:</label>-->
-        <!--            <div style="display: flex; gap: 15px; align-items: center; width: 60%;">-->
-        <!--              <span>{{ resume_info.filename }}</span>-->
-        <!--              <a href="{{ url_for('download_resume') }}" class="btn-primary" style="display: inline-block; padding: 8px 14px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 10px; font-size: 14px;">-->
-        <!--                Download-->
-        <!--              </a>-->
-        <!--            </div>-->
-        <!--          </div>-->
 
         <div class="form-row" style="margin-top: 15px">
           <label>Replace Resume:</label>
