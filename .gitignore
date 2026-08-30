@@ -3,3 +3,8 @@
 .DS_Store
 .idea/
 __pycache__/
+keys.py
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+ab_test_logs.json

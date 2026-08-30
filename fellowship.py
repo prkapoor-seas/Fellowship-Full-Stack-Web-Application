@@ -17,9 +17,10 @@ from matching import run_matching
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from keys import APP_SECRET_KEY
 import io
 import os
+
+from dotenv import load_dotenv
 
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -27,8 +28,16 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import smtplib
 
+# Load secrets from .env (gitignored). Copy .env.example to .env and fill it in.
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = APP_SECRET_KEY
+app.secret_key = os.environ.get("APP_SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError(
+        "APP_SECRET_KEY is not set. Copy .env.example to .env and set a value "
+        "(generate one with: python -c \"import secrets; print(secrets.token_hex(32))\")."
+    )
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
