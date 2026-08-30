@@ -76,26 +76,33 @@
           LabsAtYale is a platform designed to help you find a research lab more
           efficiently.
         </p> -->
-
-        <div class="heroButtons">
-          {% if not current_user.is_authenticated %}
-          <a class="btn btn--primary" href="{{ url_for('student') }}"
-            >I'm a student</a
-          >
-          <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
-            >I'm a lab member</a
-          >
-          {% endif %}
-        </div>
-
+            {% if variant == "A" %}
+            <div class="registrationBox">
+                <h2 class="registrationTitle">Register your details</h2>
+                    <div class="heroButtons">
+                      {% if not current_user.is_authenticated %}
+                      <a class="btn btn--primary" href="{{ url_for('student') }}"
+                        >I'm a student</a
+                      >
+                      <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
+                        >I'm a lab member</a
+                      >
+                      {% endif %}
+                    </div>
+            </div>
+            {% else %}
+                <div class="heroButtons">
+                  {% if not current_user.is_authenticated %}
+                  <a class="btn btn--primary" href="{{ url_for('student') }}"
+                    >I'm a student</a
+                  >
+                  <a class="btn btn--ghost" href="{{ url_for('lab_member') }}"
+                    >I'm a lab member</a
+                  >
+                  {% endif %}
+                </div>
+            {% endif %}
         <br />
-
-        <!--        <div class="loginButtons">-->
-        <!--          <p class="heroSubtitle">-->
-        <!--            Already have an Account?-->
-        <!--          </p>-->
-        <!--          <a class="btn btn&#45;&#45;login"  href="{{ url_for('login') }}">Login</a>-->
-        <!--        </div>-->
       </div>
       <div class="heroPic">
         <img

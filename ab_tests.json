@@ -1,0 +1,12 @@
+{
+  "signup_box_test": {
+    "variants": {
+      "A": {
+        "show_signup_box": true
+      },
+      "B": {
+        "show_signup_box": false
+      }
+    }
+  }
+}

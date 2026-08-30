@@ -676,6 +676,16 @@ def get_saved_fellowship_ids(student_net_id):
         ''', (student_net_id,))
         return [row[0] for row in cur.fetchall()]
 
+def get_applied_fellowships(student_net_id):
+    with closing(connect(_DATABASE_URL)) as conn:
+        cur = conn.cursor()
+        cur.execute('''
+        SELECT fellowship_id FROM applications
+            WHERE student_net_id = ?
+            ORDER BY applied_at DESC
+        ''', (student_net_id,))
+        return [row[0] for row in cur.fetchall()]
+
 def is_fellowship_saved(student_net_id, fellowship_id):
     with closing(connect(_DATABASE_URL)) as conn:
         cur = conn.cursor()

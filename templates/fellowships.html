@@ -115,10 +115,15 @@
               </button>
             </td>
             <td>
-            <a href="{{ url_for('apply_fellowship', fellowship_id=f.get_fellowship_id()) }}"
+
+                {% if f.get_fellowship_id() in applied_fellowship_ids %}
+                    Applied
+                {%  else %}
+                <a href="{{ url_for('apply_fellowship', fellowship_id=f.get_fellowship_id()) }}"
                class="btn btn-primary">
                 Apply
-            </a>
+                </a>
+                {%  endif %}
             </td>
             {% endif %}
         </tr>
