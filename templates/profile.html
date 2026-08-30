@@ -74,15 +74,7 @@
     </header>
     <div class="container profile-card">
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <p class="flash-message {{ category }}">
-              {{ message }}
-            </p>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+    {% include "_flashes.html" %}
 
       <h2 class="profile-header">Profile Information</h2>
       <form

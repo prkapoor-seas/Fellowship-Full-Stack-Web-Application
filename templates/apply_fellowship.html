@@ -39,6 +39,7 @@
         </nav>
       </div>
     </header>
+    {% include "_flashes.html" %}
 
     <h2>Apply for {{ fellowship.get_fellowship_name() }}</h2>
     <p><strong>Lab:</strong> {{ fellowship.get_lab_name() }} | <strong>Faculty:</strong> {{ fellowship.get_faculty_name() }}</p>

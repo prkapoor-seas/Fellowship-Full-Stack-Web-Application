@@ -195,6 +195,11 @@ nav a.active {
   color: white;
 }
 
+.flash-container {
+  max-width: 600px;
+  margin: 15px auto 0;
+}
+
 .flash-message {
   text-align: center;
   margin: 15px auto;
@@ -207,9 +212,20 @@ nav a.active {
   color: #2e7d32;
 }
 
-.flash-message.error {
+.flash-message.error,
+.flash-message.danger {
   background-color: #ffebee;
   color: #c62828;
+}
+
+.flash-message.warning {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
+.flash-message.info {
+  background-color: #e3f2fd;
+  color: #1565c0;
 }
 
 .btn {

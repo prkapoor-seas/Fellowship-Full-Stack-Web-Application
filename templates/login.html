@@ -47,6 +47,7 @@
         </nav>
       </div>
     </header>
+    {% include "_flashes.html" %}
     <div class="container login-card">
       <h2 class="login-header">Enter your Username and Password</h2>
       <form id="login-form" method="post" action="{{ url_for('login') }}">

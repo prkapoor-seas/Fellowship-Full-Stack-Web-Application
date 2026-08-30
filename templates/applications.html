@@ -61,6 +61,8 @@
     </header>
 
     <main class="container">
+    {% include "_flashes.html" %}
+
       <h1>My Applications</h1>
 
       {% if applications_list|length == 0 %}

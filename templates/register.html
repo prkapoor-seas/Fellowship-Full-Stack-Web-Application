@@ -44,6 +44,7 @@
         </nav>
       </div>
     </header>
+    {% include "_flashes.html" %}
     <div class="container profile-card">
       <h2 class="profile-header">Register Your Details</h2>
       <form id="register-form" method="post" action="{{ url_for('register') }}">

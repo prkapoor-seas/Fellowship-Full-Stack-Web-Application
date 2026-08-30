@@ -57,6 +57,7 @@
         </nav>
       </div>
     </header>
+    {% include "_flashes.html" %}
     <form class="searchbar" action="{{ url_for('fellowships') }}" method="get">
       <input
         type="search"

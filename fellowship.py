@@ -1,4 +1,5 @@
 from contextlib import closing
+from functools import wraps
 from sqlite3 import connect
 
 from itsdangerous import URLSafeTimedSerializer
@@ -55,6 +56,26 @@ ab_testing.init_app(app)
 def load_user(net_id):
     return get_user_by_netid([net_id])
 
+
+def role_required(*roles):
+    """
+    Restrict a view to authenticated users whose role is one of `roles`.
+
+    Anonymous users are sent through Flask-Login's login flow; authenticated
+    users with the wrong role are flashed a message and redirected home. The
+    check runs before the view body, so POST handlers are covered too.
+    """
+    def decorator(view):
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if current_user.role not in roles:
+                flash("You do not have permission to access this page.", "danger")
+                return redirect(url_for('index'))
+            return view(*args, **kwargs)
+        return wrapped
+    return decorator
+
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def index():
@@ -107,7 +128,7 @@ def saved_fellowships():
     return render_template('saved_fellowships.html', fellowships_list=saved_list, fellowship_id=fellowship_id, saved_fellowship_ids=saved_ids)
 
 @app.route('/application/<int:fellowship_id>/withdraw', methods=['POST'])
-@login_required
+@role_required('student')
 def withdraw_application(fellowship_id):
     net_id = current_user.net_id
     if delete_application(fellowship_id, net_id):
@@ -117,14 +138,19 @@ def withdraw_application(fellowship_id):
     return redirect(url_for('applications'))
 
 @app.route('/fellowship/<int:fellowship_id>/delete', methods=['POST'])
-@login_required
+@role_required('faculty')
 def delete_fellowship_route(fellowship_id):
+    owned_ids = {f.fellowship_id for f in get_fellowships_by_faculty(current_user.net_id)}
+    if fellowship_id not in owned_ids:
+        flash("You can only delete your own fellowships.", "danger")
+        return redirect(url_for('faculty_fellowships'))
+
     fellowship = get_fellowship_by_id(fellowship_id)
     if delete_fellowship(fellowship_id):
         flash(f"Fellowship '{fellowship.get_fellowship_name()}' has been removed.", "success")
     else:
         flash("Error deleting fellowship. Please try again.", "danger")
-    
+
     return redirect(url_for('faculty_fellowships'))
 
 def _handle_faculty_ranking():
@@ -178,6 +204,7 @@ def _build_fellowship_data(faculty_net_id, fellowships):
 
 
 @app.route('/faculty/fellowships', methods=['GET', 'POST'])
+@role_required('faculty')
 def faculty_fellowships():
     faculty_net_id = current_user.net_id
     fellowships_f = get_fellowships_by_faculty(faculty_net_id)
@@ -194,7 +221,7 @@ def faculty_fellowships():
     return render_template('faculty_fellowships.html', fellowship_data=fellowship_data, fellowship_id=fellowship_id, preferences=current_prefs)
 
 @app.route('/faculty/applicants')
-@login_required
+@role_required('faculty')
 def faculty_all_applicants():
     """
     Gets all students who have applied to fellowships
@@ -207,6 +234,7 @@ def faculty_all_applicants():
     return render_template('fellowship_applicants.html', fellowship_data=fellowship_data)
 
 @app.route('/faculty/fellowship/<int:fellowship_id>/applicants')
+@role_required('faculty')
 def faculty_fellowship_applicants(fellowship_id):
 
     faculty_net_id = current_user.net_id
@@ -229,6 +257,7 @@ def faculty_fellowship_applicants(fellowship_id):
 
 # apply for fellowships
 @app.route('/fellowships/apply/<int:fellowship_id>', methods=['GET', 'POST'])
+@role_required('student')
 def apply_fellowship(fellowship_id):
     if request.method == 'POST':
         fellowship = get_fellowship_by_id(fellowship_id)
@@ -327,7 +356,7 @@ def lab_member():
     return render_template('register.html', role="Faculty")
 
 @app.route('/add_fellowship', methods=['GET', 'POST'])
-@login_required
+@role_required('faculty')
 def add_fellowship():
     if request.method == 'POST':
         fellow_name = request.form.get('fellow_name')
@@ -365,12 +394,9 @@ def add_fellowship():
                 conn.commit()
                 notify_users(fellow_name, class_years)
                 return redirect(url_for('fellowships'))
-    if current_user.role != 'faculty':
-        flash("You do not have permission to access this page.", "danger")
-        return redirect(url_for('index'))
-    else:
-        fellowship_id = _get_faculty_fellowship_id()
-        return render_template('add_fellowships.html', fellowship_id=fellowship_id)
+
+    fellowship_id = _get_faculty_fellowship_id()
+    return render_template('add_fellowships.html', fellowship_id=fellowship_id)
 
 
 @app.route('/register', methods=['POST'])
