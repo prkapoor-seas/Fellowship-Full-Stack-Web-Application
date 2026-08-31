@@ -6,11 +6,36 @@
 - **Teresa Nguyen** - NetID: `ttn23`
 - **Emmett Seto** - NetID: `exs4`
 
-## 2. How to run the Flask Application
+## 2. Architecture
 
-Once you have downloaded the repository and installed all libraries in `requirements.txt`, you can run the server for the application using:
+The backend is split into two services (see `Milestones.md`):
 
-``python runserver.py 80``
+| Folder | Service | Port |
+| ------ | ------- | ---- |
+| `web/` | Main Flask application | 8080 |
+| `analytics/` | A/B assignment + event store + metrics API | 8000 |
+
+The web app talks to the analytics service only over HTTP (`web/analytics_client.py`).
+
+## 3. How to run
+
+### With Docker (both services)
+
+```
+docker compose up --build
+```
+
+Web app on http://localhost:8080, analytics dashboard on http://localhost:8000.
+`APP_SECRET_KEY` and the `SMTP_*` values are read from a local `.env` file
+(copy `.env.example`).
+
+### Without Docker
+
+```
+pip install -r web/requirements.txt -r analytics/requirements.txt
+python -m analytics.app                                 # from the repo root, :8000
+ANALYTICS_URL=http://localhost:8000 python web/runserver.py 80   # from the repo root
+```
 
 After running the server and loading the webpage, you have the option to either login using already registered username and password or sign up for a new faculty or student account. You can sign up for a student or faculty account by selecting "I'm a student" or "I'm a lab member". You can login using the "Login" tab. You also without having logged in have the opportunity to view fellowships, labs, and faculty on the webpage. 
 
@@ -28,7 +53,7 @@ Once you have applied as a `student` for fellowships, you can view your submitte
 
 ![Rank Fellowship Choices Student](/readme/RankFellowships.png)
 
-## 3. The Faculty Account and Matching Process
+## 4. The Faculty Account and Matching Process
 
 For faculty, there exists an option to add fellowships using the "Add a Fellowship tab" shown below 
 
@@ -42,7 +67,7 @@ Furthermore, once all students have ranked their fellowships, faculty can save t
 
 ![Matching Process](/readme/MatchingProcess.png)
 
-## 4. Profile Page for faculty and students
+## 5. Profile Page for faculty and students
 
 Students and faculty also have a Profile page to update their information including add a resume, change password. Students have the option to subscribe to new opportunities using the Profile page, receiving an email every time a new opportunity is added.
 

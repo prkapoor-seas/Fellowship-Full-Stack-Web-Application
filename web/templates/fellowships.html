@@ -69,7 +69,10 @@
       <button type="submit" class="btn btn--primary">Search</button>
     </form>
 
-    {% if fellowships_list|length == 0 %} (None) {% else %}
+    {% if fellowships_list|length == 0 %}
+    <p class="no-results">No fellowships found.</p>
+    {% else %}
+    <div class="table-wrap" data-page-size="5">
     <table class="result-table">
       <thead>
         <tr>
@@ -103,7 +106,7 @@
           <td>{{f.get_lab_name()}}</td>
           <td>{{f.get_faculty_name()}}</td>
           <td>{{ f.get_class_years().replace(",", "<br />")|safe }}</td>
-          <td>{{ f.get_description() }}</td>
+          <td class="col-desc">{{ f.get_description() }}</td>
           <td>{{ f.get_deadline() }}</td>
           <td>${{ f.get_stipend() }}</td>
             {% if current_user.role == 'student' %}
@@ -131,6 +134,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
     {% endif %}
    <div id="modal" class="modal-overlay">
       <div class="modal-card">
@@ -157,6 +161,7 @@
         {% endif %}
       </div>
     </div>
+    <script src="{{ url_for('static', filename='table.js') }}"></script>
     <script>
       (function () {
         // doocument = entire HTML page --> for adding more detail about the lab here
@@ -189,7 +194,10 @@
           document.body.classList.remove("modal-open");
         }
         document.querySelectorAll(".fellowship-row").forEach(function (row) {
-          row.addEventListener("click", function () {
+          row.addEventListener("click", function (event) {
+            if (event.target.closest("a") || event.target.closest("button")) {
+              return;
+            }
             openModalFromRow(row);
           });
         });

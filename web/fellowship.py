@@ -2,9 +2,11 @@ from contextlib import closing
 from functools import wraps
 from sqlite3 import connect
 
+import uuid
+
 from itsdangerous import URLSafeTimedSerializer
 from flask import Flask, request, make_response, redirect, url_for, flash, Response, jsonify
-from flask import render_template, session, send_file, current_app
+from flask import render_template, session, send_file, current_app, g
 from database import get_faculty_information, get_labs_information, get_fellowship_information, \
     get_user_by_netid_password, get_user_by_netid, get_fellowship_by_id, get_student_applications, \
     get_fellowships_by_faculty, get_fellowship_applicants, get_student_resume, update_student_resume, \
@@ -13,7 +15,7 @@ from database import get_faculty_information, get_labs_information, get_fellowsh
     save_fellowship, unsave_fellowship, get_saved_fellowship_ids, is_fellowship_saved, get_saved_fellowships, \
     delete_application, delete_fellowship, get_notification_subscribers, \
     subscribe_to_notifications, unsubscribe_from_notifications, is_subscribed, get_applied_fellowships
-import ab_testing
+import analytics_client
 from matching import run_matching
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -43,14 +45,33 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Registers the before_request hook that assigns each visitor a variant for
-# every test defined in ab_tests.json. See ab_testing.py.
-ab_testing.init_app(app)
-
 # @app.before_request
 # def clear_stale_session():
 #     if not current_user.is_authenticated:
 #         session.clear()
+
+
+@app.before_request
+def _ensure_visitor_id():
+    """
+    Give every visitor a stable opaque id (a year-long cookie). The Analytics
+    service uses it to assign and track A/B variants; see analytics_client.py.
+    """
+    if request.endpoint == "static":
+        return
+    visitor_id = request.cookies.get("visitor_id")
+    g.visitor_id = visitor_id or uuid.uuid4().hex
+    g.visitor_id_is_new = visitor_id is None
+
+
+@app.after_request
+def _persist_visitor_id(response):
+    if g.get("visitor_id_is_new"):
+        response.set_cookie(
+            "visitor_id", g.visitor_id,
+            max_age=60 * 60 * 24 * 365, samesite="Lax", httponly=True,
+        )
+    return response
 
 @login_manager.user_loader
 def load_user(net_id):
@@ -79,8 +100,8 @@ def role_required(*roles):
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def index():
-    variant = ab_testing.get_variant("signup_box_test")
-    ab_testing.ab_test_log("signup_box_test", variant)
+    variant = analytics_client.get_variant("signup_box_test", g.visitor_id)
+    analytics_client.log_event("variation_presented", "signup_box_test", g.visitor_id, variant)
     html = render_template('index.html', variant=variant)  # Can get token with cas.token
     response = make_response(html)
     return response
@@ -347,12 +368,12 @@ def applications():
 
 @app.route('/student')
 def student():
-    ab_testing.event_logger("student_signup_click", "signup_box_test")
+    analytics_client.log_event("student_signup_click", "signup_box_test", g.visitor_id)
     return render_template('register.html', role="Student")
 
 @app.route('/lab_member')
 def lab_member():
-    ab_testing.event_logger("lab_member_signup_click", "signup_box_test")
+    analytics_client.log_event("lab_member_signup_click", "signup_box_test", g.visitor_id)
     return render_template('register.html', role="Faculty")
 
 @app.route('/add_fellowship', methods=['GET', 'POST'])

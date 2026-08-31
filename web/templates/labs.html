@@ -129,6 +129,7 @@
 
     {% else %}
 
+    <div class="table-wrap" data-page-size="5">
     <table class="result-table">
       <thead>
         <tr>
@@ -176,7 +177,7 @@
             {{ lab.get_field() }}
           </td>
 
-          <td>
+          <td class="col-desc">
             {{ lab.get_description() }}
           </td>
 
@@ -207,6 +208,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
 
     {% endif %}
 
@@ -260,6 +262,7 @@
       </div>
     </div>
 
+    <script src="{{ url_for('static', filename='table.js') }}"></script>
     <script>
       (function () {
         const modal = document.getElementById("modal");

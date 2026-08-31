@@ -15,7 +15,7 @@ def test_matching_results(monkeypatch):
         fellowship 200 → stu202
     """
 
-    test_db_path = os.path.abspath("labsatyale_test.sqlite")
+    test_db_path = os.path.join(os.path.dirname(__file__), "labsatyale_test.sqlite")
 
     def fake_connect(_):
         return sqlite3.connect(test_db_path)

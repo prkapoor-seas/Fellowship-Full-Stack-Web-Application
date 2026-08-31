@@ -77,7 +77,7 @@ class FakeFellowship:
     Produces a fake fellowship to getting the fellowship information and gets the data from the client
     use fake data instead of the database since the database could change
     """
-    def __init__(self, fellow_name, description, lab, deadline, stipend, faculty, class_years):
+    def __init__(self, fellow_name, description, lab, deadline, stipend, faculty, class_years, fellowship_id=1):
         self._fellow_name = fellow_name
         self._description = description
         self._deadline = deadline
@@ -85,7 +85,11 @@ class FakeFellowship:
         self._class_years = class_years
         self._lab = lab
         self._faculty = faculty
-    
+        self._fellowship_id = fellowship_id
+
+    def get_fellowship_id(self):
+        return self._fellowship_id
+
     def get_lab_name(self):
         return self._lab
 

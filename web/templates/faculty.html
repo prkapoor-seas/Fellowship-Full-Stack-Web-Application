@@ -69,7 +69,10 @@
       <button type="submit" class="btn btn--primary">Search</button>
     </form>
 
-    {% if faculty_list|length == 0 %} (None) {% else %}
+    {% if faculty_list|length == 0 %}
+    <p class="no-results">No faculty found.</p>
+    {% else %}
+    <div class="table-wrap" data-page-size="5">
     <table class="result-table">
       <thead>
         <tr>
@@ -96,6 +99,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
     {% endif %}
 
   <div id="modal" class="modal-overlay">
@@ -112,6 +116,7 @@
 
       </div>
     </div>
+    <script src="{{ url_for('static', filename='table.js') }}"></script>
     <script>
       (function () {
 

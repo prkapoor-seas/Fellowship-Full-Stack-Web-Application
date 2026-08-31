@@ -1,22 +1,20 @@
 """
-ab_test_log.py
+Event store for the Analytics service, backed by a dedicated SQLite database
+(ab_events.sqlite), separate from the main application's database.
 
-Event store for A/B testing, backed by a dedicated SQLite database
-(ab_events.sqlite), kept separate from labsatyale.sqlite.
+    - each event is a single INSERT (no full-file rewrite), so high-rate load
+      from the simulation scripts is cheap;
+    - WAL mode lets metrics reads run without blocking the writer;
+    - per-variant metrics are one GROUP BY query.
 
-Why SQLite instead of a JSON file:
-    - each event is a single INSERT, not a full-file rewrite, so the
-      load-generating simulation scripts can emit thousands of events cheaply;
-    - WAL mode lets readers (metrics queries) run without blocking the writer;
-    - per-variant metrics are one GROUP BY query instead of loading everything
-      into Python.
+The database path defaults to ab_events.sqlite next to this module; override
+with the AB_DB_PATH environment variable (e.g. a mounted volume in a container).
 
 Public interface:
-    write_ab_log(data)      -- append one event; `data` is the dict that
-                               ab_testing.py already builds
-                               ({event, test, variant, timestamp}).
-    summarize(test_name)    -- per-variant impression / action / conversion-rate
-                               summary for a test.
+    write_ab_log(data)   -- append one event dict
+                            ({event, test, variant, visitor, timestamp}).
+    summarize(test_name) -- per-variant impression / action / conversion-rate
+                            summary for a test.
 """
 
 from contextlib import closing
@@ -24,8 +22,10 @@ from datetime import datetime
 from sqlite3 import connect
 import os
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "ab_events.sqlite")
-_SCHEMA_FILE = os.path.join(os.path.dirname(__file__), "ab_events_schema.sql")
+DB_FILE = os.environ.get(
+    "AB_DB_PATH", os.path.join(os.path.dirname(__file__), "ab_events.sqlite")
+)
+_SCHEMA_FILE = os.path.join(os.path.dirname(__file__), "schema.sql")
 
 _initialized = False
 
@@ -47,9 +47,9 @@ def write_ab_log(data):
     """
     Append one event to the store.
 
-    `data` is expected to contain 'event', 'test', 'variant', and 'timestamp'
-    (the shape ab_testing.py produces). Missing keys are tolerated: the
-    timestamp falls back to now, other fields to NULL.
+    `data` may contain 'event', 'test', 'variant', 'visitor', and 'timestamp'.
+    Missing keys are tolerated: the timestamp falls back to now, other fields to
+    NULL.
     """
     _init_db()
     # timeout + busy_timeout: under concurrent load (e.g. the simulation
@@ -58,13 +58,14 @@ def write_ab_log(data):
         conn.execute("PRAGMA busy_timeout = 10000")
         conn.execute(
             """
-            INSERT INTO ab_events (event, test, variant, created_at)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO ab_events (event, test, variant, visitor, created_at)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 data.get("event"),
                 data.get("test"),
                 data.get("variant"),
+                data.get("visitor"),
                 data.get("timestamp") or datetime.now().isoformat(),
             ),
         )
