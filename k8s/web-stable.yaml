@@ -1,0 +1,95 @@
+# Main web app, stable release, plus the SQLite volume shared with the canary.
+#
+# The app opens 'labsatyale.sqlite' relative to its working directory, so the
+# container runs from /data (the volume) and imports the code from /app.
+# Minikube is single-node, so stable and canary pods share this one file safely.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-stable
+  labels:
+    app: web
+    track: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: web
+        track: stable
+    spec:
+      initContainers:
+        # First boot only: build the database from schema.sql + mock.sql.
+        # To load the real labsatyale.sqlite instead, see k8s/README.md.
+        - name: seed-db
+          image: labsatyale-web:v1
+          imagePullPolicy: Never
+          command:
+            - python
+            - -c
+            - |
+              import os, sqlite3
+              path = "/data/labsatyale.sqlite"
+              if not os.path.exists(path):
+                  conn = sqlite3.connect(path)
+                  conn.executescript(open("/app/schema.sql").read() + open("/app/mock.sql").read())
+                  conn.close()
+                  print("seeded", path)
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      containers:
+        - name: web
+          image: labsatyale-web:v1
+          imagePullPolicy: Never
+          workingDir: /data
+          command: ["gunicorn", "--pythonpath", "/app", "--workers", "2",
+                    "--bind", "0.0.0.0:8080", "fellowship:app"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: APP_VERSION
+              value: v1
+            - name: ANALYTICS_URL
+              value: http://analytics:8000
+          envFrom:
+            - secretRef:
+                name: labsatyale-secrets   # APP_SECRET_KEY, SMTP_EMAIL, SMTP_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /labs
+              port: 8080
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: web-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-stable
+spec:
+  selector:
+    app: web
+    track: stable
+  ports:
+    - port: 80
+      targetPort: 8080

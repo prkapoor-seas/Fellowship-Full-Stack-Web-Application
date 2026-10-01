@@ -1,0 +1,19 @@
+# Primary route: all traffic for labsatyale.local goes to the stable release,
+# except the share that the canary Ingress (k8s/canary/) diverts.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: labsatyale.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-stable
+                port:
+                  number: 80

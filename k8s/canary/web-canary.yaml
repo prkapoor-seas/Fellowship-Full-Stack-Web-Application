@@ -1,0 +1,88 @@
+# Canary release: a new web image beside the stable one, sharing its database.
+# Kept in its own folder so `kubectl apply -f k8s/` deploys only the stable
+# release; apply this file when a new version is ready to test.
+#
+# Change the traffic share with canary-weight (0-100), e.g.:
+#   kubectl annotate ingress web-canary --overwrite \
+#     nginx.ingress.kubernetes.io/canary-weight=50
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-canary
+  labels:
+    app: web
+    track: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: web
+        track: canary
+    spec:
+      containers:
+        - name: web
+          image: labsatyale-web:v2
+          imagePullPolicy: Never
+          workingDir: /data
+          command: ["gunicorn", "--pythonpath", "/app", "--workers", "2",
+                    "--bind", "0.0.0.0:8080", "fellowship:app"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: APP_VERSION
+              value: v2
+            - name: ANALYTICS_URL
+              value: http://analytics:8000
+          envFrom:
+            - secretRef:
+                name: labsatyale-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /labs
+              port: 8080
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: web-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-canary
+spec:
+  selector:
+    app: web
+    track: canary
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-canary
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: labsatyale.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-canary
+                port:
+                  number: 80

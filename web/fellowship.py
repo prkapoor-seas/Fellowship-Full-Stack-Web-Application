@@ -73,6 +73,16 @@ def _persist_visitor_id(response):
         )
     return response
 
+
+@app.after_request
+def _tag_app_version(response):
+    """
+    Report which release served the request (set per Deployment in k8s/), so
+    canary traffic can be told apart from stable traffic.
+    """
+    response.headers["X-App-Version"] = os.environ.get("APP_VERSION", "dev")
+    return response
+
 @login_manager.user_loader
 def load_user(net_id):
     return get_user_by_netid([net_id])

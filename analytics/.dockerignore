@@ -5,5 +5,4 @@ __pycache__/
 *.sqlite-wal
 *.sqlite-shm
 .DS_Store
-Dockerfile
 README.md

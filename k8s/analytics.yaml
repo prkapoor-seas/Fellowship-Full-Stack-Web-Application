@@ -1,0 +1,60 @@
+# Analytics service: A/B assignment, event store, metrics API.
+# Reached by the web pods at http://analytics:8000 (same URL as docker-compose).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: analytics-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  labels:
+    app: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics
+  template:
+    metadata:
+      labels:
+        app: analytics
+    spec:
+      containers:
+        - name: analytics
+          image: labsatyale-analytics:v1
+          imagePullPolicy: Never          # built inside minikube with `minikube image build`
+          ports:
+            - containerPort: 8000
+          env:
+            - name: AB_DB_PATH
+              value: /data/ab_events.sqlite
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: analytics-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+spec:
+  selector:
+    app: analytics
+  ports:
+    - port: 8000
+      targetPort: 8000
